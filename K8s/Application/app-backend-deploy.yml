@@ -1,0 +1,49 @@
+# Backend Deployment manifest
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend-container
+        image: <ecr-repo-uri>/app-backend:v1
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+          requests:
+            cpu: "0.5"
+            memory: "256Mi"
+        env:
+        - name: DB_HOST
+          value: db-hostname
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: mydatabase
+        - name: DB_USER
+          value: myuser
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+        volumeMounts:
+        - name: logs
+          mountPath: /opt/tomcat/logs
+      volumes:
+      - name: logs
+        hostPath: /var/logs/backend

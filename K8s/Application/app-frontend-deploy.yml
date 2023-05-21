@@ -1,0 +1,40 @@
+# Deployment- frontend maifest
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  namespace: app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: app-frontend
+        image: <ecr-repo-uri>/app-frontend:v1
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "256Mi"
+          requests:
+            cpu: "0.1"
+            memory: "64Mi"
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: BACKEND_URL
+          value: http://backend-service.app.svc.cluster.local:80
+        volumeMount:
+        - name: logs
+          mountPath: /var/log/nodejs # path to nodejs logs directory
+      volumes:
+      - name: logs
+        hostPath: /var/logs/frontend

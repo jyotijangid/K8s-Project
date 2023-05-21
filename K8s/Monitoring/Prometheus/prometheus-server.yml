@@ -1,0 +1,51 @@
+# Prometheus Deployment - runs prometheus pod which is accessible through Ingress at http://prometheus.frontend.com or NodeIP:30001
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: prometheus
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: prometheus
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.30.3
+          command:
+            - "/bin/prometheus"
+            - "--config.file=/etc/prometheus/prometheus.yml"  # sample prometheus.yml defined in the same directory
+            - "--storage.tsdb.path=/prometheus/"
+          ports:
+            - name: web
+              containerPort: 9090
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/prometheus
+            - name: prometheus-storage
+              mountPath: /prometheus
+      volumes:
+        - name: prometheus-storage
+          emptyDir: {}
+---
+
+# Prometheus Service - exposes prometheus as NodePort svc on NodeIP:30001
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+spec:
+  type: NodePort
+  selector:
+    app: prometheus-service
+  ports:
+    - name: web
+      port: 80
+      targetPort: 9090
+      nodePort: 30001
+---
